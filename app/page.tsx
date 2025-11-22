@@ -1,10 +1,13 @@
 import { RestaurantList } from "./components/RestaurantList";
-import type { Restaurant, ApiResponse } from "./types/restaurant";
+import type { Restaurant } from "./types/restaurant";
 
 async function getRestaurants(): Promise<Restaurant[]> {
   try {
+    // Use the same API endpoint to ensure consistent sorting
     const response = await fetch(
-      "https://eccdn.com.au/misc/challengedata.json",
+      `${
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      }/api/restaurants`,
       {
         cache: "no-store", // Disable caching for fresh data on each request
       }
@@ -14,8 +17,8 @@ async function getRestaurants(): Promise<Restaurant[]> {
       throw new Error("Failed to fetch restaurants");
     }
 
-    const data: ApiResponse = await response.json();
-    return data.restaurants;
+    const restaurants: Restaurant[] = await response.json();
+    return restaurants;
   } catch (error) {
     console.error("Error fetching restaurants:", error);
     return [];
