@@ -243,7 +243,7 @@ export function RestaurantDetailPage({
                           <p className="text-sm text-gray-600">Anytime today</p>
                         )}
                         <p className="text-xs text-gray-500">
-                          {qtyLeft} Deals Left
+                          {qtyLeft} {qtyLeft === 1 ? "Deal" : "Deals"} Left
                         </p>
                       </div>
                     </div>
