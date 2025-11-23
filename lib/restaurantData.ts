@@ -12,7 +12,7 @@ export async function fetchRestaurantsFromAPI(): Promise<RawRestaurant[]> {
   const response = await fetch(
     "https://eccdn.com.au/misc/challengedata.json",
     {
-      cache: "no-store",
+      next: { revalidate: 3600 }, // Revalidate every hour
     }
   );
 

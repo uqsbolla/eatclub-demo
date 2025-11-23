@@ -9,6 +9,8 @@ import {
   Heart,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useState } from "react";
 import type { RawRestaurant, Deal } from "@/types/restaurant";
 import { AutoHideHeader } from "@/components/AutoHideHeader";
 import { RestaurantImage } from "@/components/RestaurantImage";
@@ -21,6 +23,15 @@ export function RestaurantDetailPage({
   restaurant,
 }: RestaurantDetailPageProps) {
   const router = useRouter();
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleBack = () => {
+    setIsExiting(true);
+    // Wait for animation to complete before navigating
+    setTimeout(() => {
+      router.back();
+    }, 300);
+  };
 
   // Sort deals by discount (highest first)
   const sortedDeals = [...restaurant.deals].sort((a, b) => {
@@ -30,22 +41,30 @@ export function RestaurantDetailPage({
   });
 
   const formatTime = (time: string) => {
-    // Convert 24h format to 12h format with AM/PM
-    const [hours, minutes] = time.split(":");
-    const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes}${ampm}`;
+    // Time is already in 12h format with am/pm suffix (e.g., "4:00pm")
+    // Just capitalize the AM/PM part
+    if (time.toLowerCase().includes("am")) {
+      return time.replace(/am/i, "AM");
+    } else if (time.toLowerCase().includes("pm")) {
+      return time.replace(/pm/i, "PM");
+    }
+    // Fallback: if already properly formatted, return as is
+    return time;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <motion.div
+      className="min-h-screen bg-gray-50"
+      initial={{ x: "100%" }}
+      animate={{ x: isExiting ? "100%" : 0 }}
+      transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
+    >
       {/* Header with Back Button */}
       <AutoHideHeader>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           {/* Back button on mobile, hidden on desktop in favor of centered logo */}
           <button
-            onClick={() => router.back()}
+            onClick={handleBack}
             className="p-2 sm:hidden"
             aria-label="Go back"
           >
@@ -54,7 +73,7 @@ export function RestaurantDetailPage({
 
           {/* Desktop back button */}
           <button
-            onClick={() => router.back()}
+            onClick={handleBack}
             className="p-2 hidden sm:block"
             aria-label="Go back"
           >
@@ -196,48 +215,43 @@ export function RestaurantDetailPage({
               return (
                 <div
                   key={deal.objectId}
-                  className="bg-white rounded-lg shadow-sm p-6"
+                  className="bg-white rounded-lg shadow-sm px-6 py-3"
                 >
-                  <div className="flex items-start gap-4">
-                    {/* Discount Badge */}
-                    <div className="flex-shrink-0">
+                  <div className="flex items-center gap-4">
+                    {/* Left side: Text content - stacked on mobile, 2 columns on desktop */}
+                    <div className="flex-1 flex flex-col sm:grid sm:grid-cols-2 sm:items-center sm:gap-x-6">
+                      {/* Discount Badge */}
                       <div className="flex items-center gap-2">
-                        <svg
-                          className="w-6 h-6 text-yellow-500"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-                        </svg>
+                        <img
+                          src="/lightning.png"
+                          alt="Lightning"
+                          className="w-4 h-6 flex-shrink-0"
+                        />
                         <span className="text-2xl font-bold text-primary">
                           {deal.discount}% Off
                         </span>
                       </div>
-                    </div>
 
-                    {/* Deal Details */}
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          {isDineIn ? (
-                            <p className="text-sm text-gray-600">
-                              Between {formatTime(deal.open || restaurant.open)}{" "}
-                              - {formatTime(deal.close || restaurant.close)}
-                            </p>
-                          ) : (
-                            <p className="text-sm text-gray-600">
-                              Anytime today
-                            </p>
-                          )}
-                          <p className="text-xs text-gray-500 mt-1">
-                            {qtyLeft} Deals Left
+                      {/* Time and quantity info */}
+                      <div className="flex flex-col gap-1">
+                        {isDineIn ? (
+                          <p className="text-sm text-gray-600">
+                            Between {formatTime(deal.open || restaurant.open)} -{" "}
+                            {formatTime(deal.close || restaurant.close)}
                           </p>
-                        </div>
-                        <button className="px-6 py-2 bg-primary text-white rounded-full font-semibold hover:bg-red-600 transition-colors">
-                          Redeem
-                        </button>
+                        ) : (
+                          <p className="text-sm text-gray-600">Anytime today</p>
+                        )}
+                        <p className="text-xs text-gray-500">
+                          {qtyLeft} Deals Left
+                        </p>
                       </div>
                     </div>
+
+                    {/* Right side: Redeem Button */}
+                    <button className="px-6 py-2 bg-white text-primary border-2 border-primary rounded-full font-semibold hover:bg-primary hover:text-white transition-colors whitespace-nowrap">
+                      Redeem
+                    </button>
                   </div>
                 </div>
               );
@@ -245,6 +259,6 @@ export function RestaurantDetailPage({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

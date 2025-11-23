@@ -15,7 +15,13 @@ export function RestaurantImage({
 }: RestaurantImageProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  // Mark component as mounted to avoid hydration issues
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const img = imgRef.current;
@@ -64,7 +70,7 @@ export function RestaurantImage({
 
   return (
     <>
-      {isLoading && (
+      {isLoading && mounted && (
         <div className="absolute inset-0 w-full h-48 bg-gray-200 animate-pulse" />
       )}
       <img
@@ -72,7 +78,7 @@ export function RestaurantImage({
         src={src}
         alt={alt}
         className={className}
-        style={{ display: isLoading ? "none" : "block" }}
+        style={{ display: isLoading && mounted ? "none" : "block" }}
       />
     </>
   );
