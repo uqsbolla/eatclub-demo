@@ -1,24 +1,11 @@
-import { RestaurantList } from "./components/RestaurantList";
-import type { Restaurant } from "./types/restaurant";
+import { HomePage } from "@/app/_components/HomePage";
+import { getRestaurants } from "@/lib/restaurantData";
+import type { Restaurant } from "@/types/restaurant";
 
-async function getRestaurants(): Promise<Restaurant[]> {
+async function fetchInitialRestaurants(): Promise<Restaurant[]> {
   try {
-    // Use the same API endpoint to ensure consistent sorting
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/restaurants`,
-      {
-        cache: "no-store", // Disable caching for fresh data on each request
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch restaurants");
-    }
-
-    const restaurants: Restaurant[] = await response.json();
-    return restaurants;
+    // Directly use shared data fetching logic (no API route needed)
+    return await getRestaurants();
   } catch (error) {
     console.error("Error fetching restaurants:", error);
     return [];
@@ -26,7 +13,7 @@ async function getRestaurants(): Promise<Restaurant[]> {
 }
 
 export default async function Home() {
-  const restaurants = await getRestaurants();
+  const restaurants = await fetchInitialRestaurants();
 
-  return <RestaurantList restaurants={restaurants} />;
+  return <HomePage restaurants={restaurants} />;
 }

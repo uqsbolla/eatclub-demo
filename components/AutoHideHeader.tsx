@@ -9,8 +9,12 @@ interface AutoHideHeaderProps {
 export function AutoHideHeader({ children }: AutoHideHeaderProps) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Mark component as mounted to avoid hydration mismatch
+    setMounted(true);
+
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
@@ -37,11 +41,13 @@ export function AutoHideHeader({ children }: AutoHideHeaderProps) {
 
   return (
     <header
-      className={`bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-10 transition-transform duration-300 ${
-        isHeaderVisible ? "translate-y-0" : "-translate-y-full"
-      }`}
+      className={`bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-10 ${
+        mounted ? "transition-transform duration-300" : ""
+      } ${isHeaderVisible ? "translate-y-0" : "-translate-y-full"}`}
+      suppressHydrationWarning
     >
       {children}
     </header>
   );
 }
+

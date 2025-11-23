@@ -3,16 +3,17 @@
 import { User, Search, SlidersHorizontal, Heart } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { Restaurant } from "../types/restaurant";
-import { AutoHideHeader } from "./AutoHideHeader";
-import { RestaurantImage } from "./RestaurantImage";
-import { useDebounce } from "../hooks/useDebounce";
+import Link from "next/link";
+import type { Restaurant } from "@/types/restaurant";
+import { AutoHideHeader } from "@/components/AutoHideHeader";
+import { RestaurantImage } from "@/components/RestaurantImage";
+import { useDebounce } from "@/hooks/useDebounce";
 
-interface RestaurantListProps {
+interface HomePageProps {
   restaurants: Restaurant[];
 }
 
-export function RestaurantList({ restaurants }: RestaurantListProps) {
+export function HomePage({ restaurants }: HomePageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 300);
 
@@ -135,9 +136,10 @@ export function RestaurantList({ restaurants }: RestaurantListProps) {
               const isDineIn = bestDeal?.dineIn === "true";
 
               return (
-                <div
+                <Link
                   key={restaurant.objectId}
-                  className="bg-white rounded-lg shadow-sm overflow-hidden"
+                  href={`/restaurants/${restaurant.objectId}`}
+                  className="bg-white rounded-lg shadow-sm overflow-hidden block hover:shadow-md hover:border-2 hover:border-primary transition-all border-2 border-transparent"
                 >
                   {/* Restaurant Image */}
                   <div className="relative w-full h-48 bg-gray-200">
@@ -169,7 +171,13 @@ export function RestaurantList({ restaurants }: RestaurantListProps) {
                       <h3 className="text-lg font-bold text-gray-900">
                         {restaurant.name}
                       </h3>
-                      <button className="p-1">
+                      <button
+                        className="p-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
                         <Heart className="w-6 h-6 text-gray-300 hover:text-primary" />
                       </button>
                     </div>
@@ -190,7 +198,7 @@ export function RestaurantList({ restaurants }: RestaurantListProps) {
                       <span>Order Online</span>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -199,3 +207,4 @@ export function RestaurantList({ restaurants }: RestaurantListProps) {
     </div>
   );
 }
+
