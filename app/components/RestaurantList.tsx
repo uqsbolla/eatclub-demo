@@ -3,7 +3,7 @@
 import { User, Search, SlidersHorizontal, Heart } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { Restaurant, Deal } from "../types/restaurant";
+import type { Restaurant } from "../types/restaurant";
 import { AutoHideHeader } from "./AutoHideHeader";
 import { RestaurantImage } from "./RestaurantImage";
 import { useDebounce } from "../hooks/useDebounce";
@@ -30,31 +30,22 @@ export function RestaurantList({ restaurants }: RestaurantListProps) {
         : `/api/restaurants`;
 
       const response = await fetch(url);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to fetch restaurants");
       }
+
       return response.json() as Promise<Restaurant[]>;
     },
-    enabled: searchQuery.length > 0, // Only fetch when there's a search query
+    enabled: debouncedQuery.length > 0, // Only fetch when there's a debounced search query
     retry: 1, // Retry once before showing error
+    networkMode: "always", // Always attempt fetch, even if browser reports offline
   });
 
   // Use search results if searching, otherwise use SSR data
   const displayRestaurants =
     searchQuery.length > 0 ? searchResults || [] : restaurants;
-
-  const getBestDeal = (deals: Deal[]) => {
-    if (!deals || deals.length === 0) return null;
-    return deals.reduce((best, current) =>
-      parseInt(current.discount) > parseInt(best.discount) ? current : best
-    );
-  };
-
-  const calculateDistance = () => {
-    // Mock distance for now
-    return "0.5km Away";
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -140,7 +131,7 @@ export function RestaurantList({ restaurants }: RestaurantListProps) {
         {!isLoading && !isError && displayRestaurants.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {displayRestaurants.map((restaurant) => {
-              const bestDeal = getBestDeal(restaurant.deals);
+              const { bestDeal, distance } = restaurant;
               const isDineIn = bestDeal?.dineIn === "true";
 
               return (
@@ -158,7 +149,8 @@ export function RestaurantList({ restaurants }: RestaurantListProps) {
                     {bestDeal && (
                       <div className="absolute top-3 left-3 bg-primary text-white px-3 py-1 rounded">
                         <div className="font-bold text-base leading-tight">
-                          {bestDeal.discount}% off{isDineIn ? " - Dine In" : ""}
+                          {bestDeal.discount}% off
+                          {isDineIn ? " - Dine In" : ""}
                         </div>
                         {isDineIn && bestDeal.open && bestDeal.close ? (
                           <div className="text-xs">
@@ -183,7 +175,7 @@ export function RestaurantList({ restaurants }: RestaurantListProps) {
                     </div>
 
                     <p className="text-sm text-gray-600 mb-2">
-                      {calculateDistance()}, {restaurant.suburb}
+                      {distance}, {restaurant.suburb}
                     </p>
 
                     <p className="text-xs text-gray-600 mb-2">

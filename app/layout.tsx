@@ -3,8 +3,8 @@ import "./globals.css";
 import { QueryProvider } from "./providers/QueryProvider";
 
 export const metadata: Metadata = {
-  title: "Hello World - Next.js App",
-  description: "A simple Next.js app with Tailwind CSS",
+  title: "EatClub Demo",
+  description: "Restaurant discovery app with exclusive deals",
 };
 
 export default function RootLayout({

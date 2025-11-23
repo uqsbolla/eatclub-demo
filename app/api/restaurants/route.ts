@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Restaurant, ApiResponse } from "@/app/types/restaurant";
+import type {
+  RawRestaurant,
+  Restaurant,
+  ApiResponse,
+} from "@/app/types/restaurant";
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,35 +37,50 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Helper function to get the best deal for a restaurant
+    const getBestDeal = (deals: any[]) => {
+      if (!deals || deals.length === 0) return null;
+      return deals.reduce((best, current) =>
+        parseInt(current.discount) > parseInt(best.discount) ? current : best
+      );
+    };
+
     // Sort by best deal (highest discount first)
     restaurants.sort((a, b) => {
-      const getBestDiscount = (restaurant: Restaurant) => {
+      const getBestDiscount = (restaurant: RawRestaurant) => {
         if (!restaurant.deals || restaurant.deals.length === 0) return 0;
-        return Math.max(...restaurant.deals.map((deal) => parseInt(deal.discount)));
+        return Math.max(
+          ...restaurant.deals.map((deal) => parseInt(deal.discount))
+        );
       };
 
       return getBestDiscount(b) - getBestDiscount(a);
     });
 
-    // Return only the fields currently being rendered
-    const filteredRestaurants = restaurants.map((restaurant) => ({
-      objectId: restaurant.objectId,
-      name: restaurant.name,
-      address1: restaurant.address1,
-      suburb: restaurant.suburb,
-      cuisines: restaurant.cuisines,
-      imageLink: restaurant.imageLink,
-      deals: restaurant.deals.map((deal) => ({
-        objectId: deal.objectId,
-        discount: deal.discount,
-        dineIn: deal.dineIn,
-        open: deal.open,
-        close: deal.close,
-        qtyLeft: deal.qtyLeft,
-      })),
-    }));
+    // Return optimized data with only the best deal and pre-computed distance
+    const optimizedRestaurants: Restaurant[] = restaurants.map((restaurant) => {
+      const bestDeal = getBestDeal(restaurant.deals);
+      return {
+        objectId: restaurant.objectId,
+        name: restaurant.name,
+        suburb: restaurant.suburb,
+        cuisines: restaurant.cuisines,
+        imageLink: restaurant.imageLink,
+        bestDeal: bestDeal
+          ? {
+              objectId: bestDeal.objectId,
+              discount: bestDeal.discount,
+              dineIn: bestDeal.dineIn,
+              open: bestDeal.open,
+              close: bestDeal.close,
+              qtyLeft: bestDeal.qtyLeft,
+            }
+          : null,
+        distance: "0.5km Away",
+      };
+    });
 
-    return NextResponse.json(filteredRestaurants);
+    return NextResponse.json(optimizedRestaurants);
   } catch (error) {
     console.error("Error in /api/restaurants:", error);
     return NextResponse.json(
@@ -70,4 +89,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
